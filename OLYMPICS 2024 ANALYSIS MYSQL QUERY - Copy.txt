@@ -1,0 +1,87 @@
+CREATE DATABASE OLYMPICS_2024_ANALYSIS;
+USE OLYMPICS_2024_ANALYSIS;
+
+
+
+
+-- MEDAL DISTRIBUTION BY GENDER
+SELECT m.country_code,COUNT(*) AS total_medals,
+    COUNT(CASE WHEN m.medal_type = 'Gold Medal' THEN 1 END) AS gold_medals,
+    COUNT(CASE WHEN m.medal_type = 'Silver Medal' THEN 1 END) AS silver_medals,
+    COUNT(CASE WHEN m.medal_type = 'Bronze Medal' THEN 1 END) AS bronze_medals,
+    COUNT(DISTINCT m.code) AS total_athletes,
+    ROUND(100.0 * COUNT(CASE WHEN m.gender = 'W' THEN 1 END) / COUNT(*), 1) AS female_pct,
+    ROUND(100.0 * COUNT(CASE WHEN m.gender = 'M' THEN 1 END) / COUNT(*), 1) AS male_pct
+FROM medals m
+LEFT JOIN athletes a ON m.code = a.code
+WHERE YEAR(m.medal_date) = 2024
+GROUP BY m.country_code
+ORDER BY total_medals DESC
+LIMIT 10;
+
+
+
+
+-- TOP 10 Countries with most Gold medals
+SELECT country,`Gold` AS gold_count
+FROM olympics2024
+ORDER BY `Gold` DESC
+LIMIT 10;
+
+
+
+
+-- TOP 5 ALTHELETES WITH MOST GOLD MEDALS
+SELECT name, COUNT(DISTINCT event) AS gold_medal_events
+FROM medals
+WHERE medal_type = 'Gold Medal'
+GROUP BY name
+ORDER BY gold_medal_events DESC
+LIMIT 5;
+
+
+
+
+-- TOP 10 MOST PERFORMED COUNTRIES
+WITH CountryMedals AS (SELECT "Country" AS country_name,"Country Code" AS country_code,Gold,Silver,Bronze,(Gold + Silver + Bronze) AS total_medals
+FROM olympics2024), RankedCountries AS (SELECT *,ROW_NUMBER() OVER (ORDER BY total_medals DESC) AS Ranking
+FROM CountryMedals
+)
+SELECT Ranking,country_name,country_code,Gold,Silver,Bronze,total_medals
+FROM RankedCountries
+WHERE 
+    Ranking <= 10;
+    
+
+
+
+       -- Medal Efficiency Leaderboard – Performance per Athlete
+SELECT 
+    m.country_code,
+    COUNT(*) AS total_medals,
+    t.total_athletes,
+    ROUND(COUNT(*) * 1.0 / t.total_athletes, 2) AS medals_per_athlete
+FROM medals m
+JOIN (
+    SELECT country_code, COUNT(DISTINCT name) AS total_athletes
+    FROM medals
+    GROUP BY country_code
+) t ON m.country_code = t.country_code
+GROUP BY m.country_code, t.total_athletes
+ORDER BY medals_per_athlete DESC
+LIMIT 5;
+
+
+
+
+-- Top Sports for Female Athletes by Medal Count
+SELECT 
+    discipline AS sport,
+    COUNT(*) AS female_medals
+FROM medals
+WHERE gender = 'W'
+GROUP BY discipline
+ORDER BY female_medals DESC
+LIMIT 5;
+
+
