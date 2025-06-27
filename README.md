@@ -1,4 +1,5 @@
 📊 Olympics 2024 Medal Analysis – SQL & Power BI
+
 🔍 Project Description
 This project analyzes medal distribution data from the 2024 Olympic Games using SQL for backend querying and Power BI for interactive dashboard visualization. It uncovers insights into country-wise performance, gender-based medal distribution, top-performing athletes, and medal efficiency.
 
